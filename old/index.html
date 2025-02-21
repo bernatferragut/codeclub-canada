@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canadian Code Clubs</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: white;
+            color: black;
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        button {
+            background: white;
+            border: 2px solid black;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 2rem 0;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: black;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background: black;
+            color: white;
+        }
+
+        .loading {
+            display: none;
+            margin: 1rem 0;
+        }
+
+        a {
+            color: black;
+            text-decoration: none;
+            border-bottom: 1px dotted black;
+        }
+
+        .error {
+            color: red;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Canadian Code Clubs</h1>
+        <button onclick="fetchClubs()">FETCH CLUBS</button>
+        <div class="loading">LOADING...</div>
+        <div class="error" id="error"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const PROVINCE_CODES = {
+            'A': 'NL', 'B': 'NS', 'C': 'PE', 'E': 'NB',
+            'G': 'QC', 'H': 'QC', 'J': 'QC', 'K': 'ON',
+            'L': 'ON', 'M': 'ON', 'N': 'ON', 'P': 'ON',
+            'R': 'MB', 'S': 'SK', 'T': 'AB', 'V': 'BC',
+            'X': 'NT', 'Y': 'YT'
+        };
+
+        function getProvince(postalCode) {
+            if (!postalCode) return 'Unknown';
+            const prefix = postalCode[0]?.toUpperCase();
+            return PROVINCE_CODES[prefix] || 'Unknown';
+        }
+
+        function safeUrl(url) {
+            try {
+                return new URL(url);
+            } catch {
+                return null;
+            }
+        }
+
+        async function fetchClubs() {
+            const button = document.querySelector('button');
+            const loading = document.querySelector('.loading');
+            const errorDiv = document.getElementById('error');
+            const results = document.getElementById('results');
+
+            button.disabled = true;
+            loading.style.display = 'block';
+            errorDiv.textContent = '';
+            results.innerHTML = '';
+
+            try {
+                let allClubs = [];
+                let hasNextPage = true;
+                let endCursor = null;
+                const PAGE_SIZE = 50;
+                let pageCount = 0;
+
+                while (hasNextPage && pageCount < 10) { // Safety limit
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                    const response = await fetch('https://clubs-api.raspberrypi.org/graphql', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query: `
+                                query ($countryCode: String!, $after: String, $first: Int!) {
+                                    clubs(
+                                        after: $after,
+                                        first: $first,
+                                        filterBy: { countryCode: $countryCode, verified: true }
+                                    ) {
+                                        nodes {
+                                            name
+                                            postalCode
+                                            address
+                                            latitude
+                                            longitude
+                                            website
+                                        }
+                                        pageInfo {
+                                            endCursor
+                                            hasNextPage
+                                        }
+                                    }
+                                }
+                            `,
+                            variables: {
+                                countryCode: 'CA',
+                                after: endCursor,
+                                first: PAGE_SIZE
+                            }
+                        }),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+                    const { data, errors } = await response.json();
+                    if (errors) throw new Error(JSON.stringify(errors));
+
+                    const processed = data.clubs.nodes.map(club => {
+                        const rawCity = club.address?.split(',')?.[0]?.trim();
+                        const url = safeUrl(club.website);
+                        
+                        return {
+                            name: club.name || 'Unnamed Club',
+                            city: rawCity || 'Unknown',
+                            province: getProvince(club.postalCode),
+                            postalCode: club.postalCode?.toUpperCase() || 'N/A',
+                            latitude: club.latitude?.toFixed(6),
+                            longitude: club.longitude?.toFixed(6),
+                            website: url?.href || null,
+                            hostname: url?.hostname || 'N/A'
+                        };
+                    });
+
+                    allClubs = allClubs.concat(processed);
+                    hasNextPage = data.clubs.pageInfo.hasNextPage;
+                    endCursor = data.clubs.pageInfo.endCursor;
+                    pageCount++;
+                }
+
+                displayResults(allClubs);
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                console.error('Fetch error:', error);
+            } finally {
+                button.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(clubs) {
+            const tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Postal Code</th>
+                            <th>Website</th>
+                            <th>Coordinates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${clubs.map(club => `
+                            <tr>
+                                <td>${club.name}</td>
+                                <td>${club.city}, ${club.province}</td>
+                                <td>${club.postalCode}</td>
+                                <td>
+                                    ${club.website ? 
+                                        `<a href="${club.website}" target="_blank">${club.hostname}</a>` : 
+                                        'N/A'}
+                                </td>
+                                <td>${club.latitude}, ${club.longitude}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            results.innerHTML = tableHtml;
+        }
+    </script>
+</body>
+</html>
