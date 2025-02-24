@@ -36,7 +36,7 @@ async function fetchClubs() {
         let allClubs = [];
         let hasNextPage = true;
         let endCursor = null;
-        const PAGE_SIZE = 50;
+        const PAGE_SIZE = 200;
 
         while (hasNextPage) {
             const controller = new AbortController();
