@@ -36,7 +36,7 @@ async function fetchClubs() {
         let allClubs = [];
         let hasNextPage = true;
         let endCursor = null;
-        const PAGE_SIZE = 200;
+        const PAGE_SIZE = 200; // Reduce the page size to stay within the allowed query complexity
 
         while (hasNextPage) {
             const controller = new AbortController();
@@ -93,6 +93,9 @@ async function fetchClubs() {
 
             const { data, errors } = await response.json();
             if (errors) throw new Error(JSON.stringify(errors));
+
+            console.log(data); // Log the API response
+            console.log(`hasNextPage: ${data.clubs.pageInfo.hasNextPage}, endCursor: ${data.clubs.pageInfo.endCursor}`); // Log pagination info
 
             const processed = data.clubs.nodes.map(club => {
                 // Address composition
