@@ -51,7 +51,7 @@ async function fetchClubs() {
                             clubs(
                                 after: $after,
                                 first: $first,
-                                filterBy: { countryCode: $countryCode, verified: true }
+                                filterBy: { countryCode: $countryCode, verified: false }
                             ) {
                                 nodes {
                                     name
