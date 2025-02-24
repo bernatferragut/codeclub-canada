@@ -51,7 +51,7 @@ async function fetchClubs() {
                             clubs(
                                 after: $after,
                                 first: $first,
-                                filterBy: { countryCode: $countryCode, verified: false }
+                                filterBy: { countryCode: $countryCode }
                             ) {
                                 nodes {
                                     name
@@ -76,6 +76,7 @@ async function fetchClubs() {
                                     venueType
                                     openToPublic
                                     lookingForVolunteers
+                                    verified
                                 }
                                 pageInfo {
                                     endCursor
@@ -136,7 +137,8 @@ async function fetchClubs() {
                     frequencyNote: club.frequencyNote || 'N/A',
                     attendanceType: club.attendanceType || 'N/A',
                     brand: club.brand || 'N/A',
-                    stage: club.stage || 'N/A'
+                    stage: club.stage || 'N/A',
+                    verified: club.verified ? 'Yes' : 'No'
                 };
             });
 
@@ -197,6 +199,7 @@ function displayResults(clubs) {
                     <th>Attendance Type</th>
                     <th>Brand</th>
                     <th>Stage</th>
+                    <th>Verified</th>
                 </tr>
             </thead>
             <tbody>
@@ -223,6 +226,7 @@ function displayResults(clubs) {
                         <td>${club.attendanceType}</td>
                         <td>${club.brand}</td>
                         <td>${club.stage}</td>
+                        <td>${club.verified}</td>
                     </tr>
                 `).join('')}
             </tbody>
