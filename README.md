@@ -2,6 +2,5 @@
 
 ### How to use
 
-This coode creates a website with a button
-Click the button and the up tp date Canada Codeclub info will display
+This code creates a website with a button. Click the button and the up-to-date Canada Code Club info will display.
 

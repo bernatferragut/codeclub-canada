@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canadian Code Clubs</title>
+    <title>Canada Code Clubs</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="main.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <h1>Canadian Code Clubs</h1>
-        <button onclick="fetchClubs()">FETCH CLUBS</button>
-        <div class="loading">LOADING...</div>
-        <div class="error" id="error"></div>
+        <h1>Canada Code Clubs</h1>
+        <button onclick="fetchClubs()">Fetch Clubs</button>
+        <div class="loading" style="display: none;">Loading...</div>
+        <div id="error"></div>
         <div id="results"></div>
     </div>
-    <script src="main.js"></script>
 </body>
 </html>
