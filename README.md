@@ -2,6 +2,6 @@
 
 ### How to use
 
-This coode creates a website with a button
+This code creates a website with a fetch button.
 Click the button and the up tp date Canada Codeclub info will display
 
