@@ -32,12 +32,12 @@ async function fetchClubs() {
     errorDiv.textContent = '';
     results.innerHTML = '';
 
-    try {
-        let allClubs = [];
-        let hasNextPage = true;
-        let endCursor = null;
-        const PAGE_SIZE = 200; // Reduce the page size to stay within the allowed query complexity
+    let hasNextPage = true;
+    let endCursor = null;
+    const PAGE_SIZE = 100;
+    const allClubs = [];
 
+    try {
         while (hasNextPage) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -58,6 +58,15 @@ async function fetchClubs() {
                                     postalCode
                                     address1
                                     address2
+                                    email
+                                    startTime
+                                    endTime
+                                    day
+                                    frequency
+                                    frequencyNote
+                                    attendanceType
+                                    brand
+                                    stage
                                     latitude
                                     longitude
                                     website
@@ -67,7 +76,6 @@ async function fetchClubs() {
                                     venueType
                                     openToPublic
                                     lookingForVolunteers
-                                    frequency
                                 }
                                 pageInfo {
                                     endCursor
@@ -120,14 +128,40 @@ async function fetchClubs() {
                     websiteHost: url?.hostname || 'N/A',
                     publicAccess: club.openToPublic ? 'Yes' : 'No',
                     volunteersNeeded: club.lookingForVolunteers ? 'Yes' : 'No',
-                    meetingFrequency: club.frequency || 'Not specified'
+                    meetingFrequency: club.frequency || 'Not specified',
+                    email: club.email || 'N/A',
+                    startTime: club.startTime || 'N/A',
+                    endTime: club.endTime || 'N/A',
+                    day: club.day || 'N/A',
+                    frequencyNote: club.frequencyNote || 'N/A',
+                    attendanceType: club.attendanceType || 'N/A',
+                    brand: club.brand || 'N/A',
+                    stage: club.stage || 'N/A'
                 };
             });
 
-            allClubs = allClubs.concat(processed);
+            allClubs.push(...processed);
             hasNextPage = data.clubs.pageInfo.hasNextPage;
             endCursor = data.clubs.pageInfo.endCursor;
         }
+
+        // Convert the data to CSV format using PapaParse
+        const csv = Papa.unparse(allClubs);
+
+        // Create a Blob from the CSV data
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+        // Create a link element to download the CSV file
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'clubs.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        console.log('Data has been written to clubs.csv');
 
         displayResults(allClubs);
     } catch (error) {
@@ -155,6 +189,14 @@ function displayResults(clubs) {
                     <th>Public Access</th>
                     <th>Volunteers Needed</th>
                     <th>Meeting Frequency</th>
+                    <th>Email</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Day</th>
+                    <th>Frequency Note</th>
+                    <th>Attendance Type</th>
+                    <th>Brand</th>
+                    <th>Stage</th>
                 </tr>
             </thead>
             <tbody>
@@ -173,6 +215,14 @@ function displayResults(clubs) {
                         <td>${club.publicAccess}</td>
                         <td>${club.volunteersNeeded}</td>
                         <td>${club.meetingFrequency}</td>
+                        <td>${club.email}</td>
+                        <td>${club.startTime}</td>
+                        <td>${club.endTime}</td>
+                        <td>${club.day}</td>
+                        <td>${club.frequencyNote}</td>
+                        <td>${club.attendanceType}</td>
+                        <td>${club.brand}</td>
+                        <td>${club.stage}</td>
                     </tr>
                 `).join('')}
             </tbody>
