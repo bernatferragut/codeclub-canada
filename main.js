@@ -66,7 +66,6 @@ async function fetchClubs() {
                                     frequencyNote
                                     attendanceType
                                     brand
-                                    stage
                                     latitude
                                     longitude
                                     website
@@ -137,7 +136,6 @@ async function fetchClubs() {
                     frequencyNote: club.frequencyNote || 'N/A',
                     attendanceType: club.attendanceType || 'N/A',
                     brand: club.brand || 'N/A',
-                    stage: club.stage || 'N/A',
                     verified: club.verified ? 'Yes' : 'No'
                 };
             });
@@ -198,7 +196,6 @@ function displayResults(clubs) {
                     <th>Frequency Note</th>
                     <th>Attendance Type</th>
                     <th>Brand</th>
-                    <th>Stage</th>
                     <th>Verified</th>
                 </tr>
             </thead>
@@ -225,7 +222,6 @@ function displayResults(clubs) {
                         <td>${club.frequencyNote}</td>
                         <td>${club.attendanceType}</td>
                         <td>${club.brand}</td>
-                        <td>${club.stage}</td>
                         <td>${club.verified}</td>
                     </tr>
                 `).join('')}
